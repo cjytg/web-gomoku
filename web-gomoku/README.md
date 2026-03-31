@@ -17,7 +17,7 @@
 - **前端**: React 18 + TypeScript + Tailwind CSS
 - **实时通信**: Supabase Realtime
 - **构建工具**: Vite
-- **部署**: Vercel + Supabase
+- **部署**: 腾讯云EdgeOne Pages / Vercel + Supabase
 
 ## 本地运行
 
@@ -46,14 +46,25 @@ npm run build
 
 ## 部署指南
 
-### 前端部署到Vercel
+### 方案一：部署到腾讯云EdgeOne Pages（推荐，国内访问快）
+1. Fork本项目到你的GitHub/Gitee账号
+2. 登录腾讯云控制台，进入EdgeOne Pages服务
+3. 新建项目，关联你的代码仓库
+4. 配置构建命令：`npm run build`
+5. 配置发布目录：`dist`
+6. 配置环境变量：
+   - `VITE_SUPABASE_URL`：你的Supabase项目URL
+   - `VITE_SUPABASE_ANON_KEY`：你的Supabase匿名密钥
+7. 点击部署，完成后即可获得CNAME域名，绑定自己的域名即可访问
+
+### 方案二：部署到Vercel
 1. Fork本项目到你的GitHub账号
 2. 在Vercel中导入项目
 3. 配置环境变量
 4. 点击部署，完成后即可获得访问域名
 
-### Supabase配置
-1. 创建Supabase项目
+### Supabase配置（两种部署方案都需要）
+1. 创建Supabase项目（推荐选择新加坡节点，国内访问速度不错）
 2. 在SQL编辑器中执行以下SQL创建rooms表：
 ```sql
 create table rooms (

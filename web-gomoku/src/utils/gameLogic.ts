@@ -1,5 +1,5 @@
-import { Board, Player, Position, Difficulty, SCORES, WINNING_LENGTH, BOARD_SIZE } from '../types';
-import { DIFFICULTY_LEVELS } from '../constants/game';
+import { Board, Player, Position, Difficulty } from '../types';
+import { DIFFICULTY_LEVELS, SCORES, WINNING_LENGTH, BOARD_SIZE } from '../constants/game';
 
 export const createEmptyBoard = (): Board => {
   return Array(BOARD_SIZE).fill(0).map(() => Array(BOARD_SIZE).fill(0));

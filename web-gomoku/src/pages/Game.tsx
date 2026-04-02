@@ -18,7 +18,7 @@ const Game: React.FC = () => {
   const [showRoomModal, setShowRoomModal] = useState(mode === 'multiplayer');
 
   const { state, handleClick, restartGame, undoMove, updateBoardFromExternal, updateGameStatus } = useGame(mode, difficulty);
-  const { room, loading, error, playerNumber, createRoom, joinRoom, makeMove: makeMultiplayerMove, leaveRoom } = useMultiplayer();
+  const { room, loading, error, playerNumber, createRoom, joinRoom, makeMove: makeMultiplayerMove, restartRoom, leaveRoom } = useMultiplayer();
 
   useEffect(() => {
     if (!mode) {
@@ -64,10 +64,16 @@ const Game: React.FC = () => {
     }
   };
 
-  const handleRestart = () => {
-    if (mode === 'multiplayer') {
-      leaveRoom();
-      setShowRoomModal(true);
+  const handleRestart = async () => {
+    if (mode === 'multiplayer' && room) {
+      // 联机模式下，游戏结束后在同一个房间重新开始
+      if (state.gameStatus !== 'playing') {
+        await restartRoom();
+      } else {
+        // 游戏进行中点击重新开始还是需要退出房间
+        leaveRoom();
+        setShowRoomModal(true);
+      }
     }
     restartGame();
   };

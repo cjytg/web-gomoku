@@ -151,6 +151,34 @@ export const useMultiplayer = () => {
     }
   }, [room, playerNumber, supabase]);
 
+  const restartRoom = useCallback(async (): Promise<boolean> => {
+    if (!supabase || !room) {
+      setError('房间不存在，无法重新开始');
+      return false;
+    }
+
+    try {
+      const emptyBoard: Board = Array(15).fill(0).map(() => Array(15).fill(0));
+
+      const { error } = await supabase
+        .from('rooms')
+        .update({
+          board: emptyBoard,
+          current_player: 1,
+          status: 'playing',
+          winner: null,
+          last_move: null,
+        })
+        .eq('id', room.id);
+
+      if (error) throw error;
+      return true;
+    } catch (err: any) {
+      setError(err.message);
+      return false;
+    }
+  }, [room, supabase]);
+
   const leaveRoom = useCallback(async () => {
     if (subscription) {
       supabase?.removeChannel(subscription);
@@ -191,6 +219,7 @@ export const useMultiplayer = () => {
     createRoom,
     joinRoom,
     makeMove,
+    restartRoom,
     leaveRoom,
   };
 };

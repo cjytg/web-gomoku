@@ -17,8 +17,8 @@ const Game: React.FC = () => {
   const [opponentName, setOpponentName] = useState<string>('');
   const [showRoomModal, setShowRoomModal] = useState(mode === 'multiplayer');
 
-  const { state, handleClick, restartGame, undoMove, updateBoardFromExternal, updateGameStatus } = useGame(mode, difficulty);
-  const { room, loading, error, playerNumber, createRoom, joinRoom, makeMove: makeMultiplayerMove, restartRoom, leaveRoom } = useMultiplayer();
+  const { state, handleClick, restartGame, undoMove: localUndoMove, updateBoardFromExternal, updateGameStatus } = useGame(mode, difficulty);
+  const { room, loading, error, playerNumber, createRoom, joinRoom, makeMove: makeMultiplayerMove, restartRoom, undoMove: multiplayerUndoMove, leaveRoom } = useMultiplayer();
 
   useEffect(() => {
     if (!mode) {
@@ -123,7 +123,15 @@ const Game: React.FC = () => {
           winner={state.winner}
           isAIThinking={state.isAIThinking}
           onRestart={handleRestart}
-          onUndo={undoMove}
+          onUndo={async () => {
+            if (mode === 'multiplayer') {
+              if (room && state.gameStatus === 'playing' && state.currentPlayer === playerNumber) {
+                await multiplayerUndoMove();
+              }
+            } else {
+              localUndoMove();
+            }
+          }}
           onBackToMenu={handleBackToMenu}
           playerName={playerName}
           opponentName={opponentName}

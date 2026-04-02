@@ -179,6 +179,37 @@ export const useMultiplayer = () => {
     }
   }, [room, supabase]);
 
+  const undoMove = useCallback(async (): Promise<boolean> => {
+    if (!supabase || !room || room.status !== 'playing') {
+      setError('当前状态无法悔棋');
+      return false;
+    }
+
+    try {
+      // 重新构建棋盘，撤销最后一步
+      const newBoard = JSON.parse(JSON.stringify(room.board));
+      if (room.last_move) {
+        const { row, col } = room.last_move;
+        newBoard[row][col] = 0;
+      }
+
+      const { error } = await supabase
+        .from('rooms')
+        .update({
+          board: newBoard,
+          current_player: room.current_player === 1 ? 2 : 1,
+          last_move: null,
+        })
+        .eq('id', room.id);
+
+      if (error) throw error;
+      return true;
+    } catch (err: any) {
+      setError(err.message);
+      return false;
+    }
+  }, [room, supabase]);
+
   const leaveRoom = useCallback(async () => {
     if (subscription) {
       supabase?.removeChannel(subscription);
@@ -220,6 +251,7 @@ export const useMultiplayer = () => {
     joinRoom,
     makeMove,
     restartRoom,
+    undoMove,
     leaveRoom,
   };
 };

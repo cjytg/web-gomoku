@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Board as BoardType, Move } from '../types';
 import Piece from './Piece';
 import { BOARD_SIZE, CELL_SIZE, BOARD_PADDING } from '../constants/game';
@@ -11,14 +11,36 @@ interface BoardProps {
 }
 
 const Board: React.FC<BoardProps> = ({ board, lastMove, onCellClick, disabled = false }) => {
-  const boardSize = (BOARD_SIZE - 1) * CELL_SIZE + BOARD_PADDING * 2;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
 
-  const handleClick = (e: React.MouseEvent<SVGSVGElement>) => {
+  useEffect(() => {
+    const updateScale = () => {
+      if (containerRef.current) {
+        const containerWidth = containerRef.current.clientWidth;
+        const originalBoardSize = (BOARD_SIZE - 1) * CELL_SIZE + BOARD_PADDING * 2;
+        const maxWidth = Math.min(containerWidth - 32, window.innerWidth - 32);
+        setScale(Math.min(1, maxWidth / originalBoardSize));
+      }
+    };
+
+    updateScale();
+    window.addEventListener('resize', updateScale);
+    return () => window.removeEventListener('resize', updateScale);
+  }, []);
+
+  const originalBoardSize = (BOARD_SIZE - 1) * CELL_SIZE + BOARD_PADDING * 2;
+  const displaySize = originalBoardSize * scale;
+
+  const handleClick = (e: React.MouseEvent<SVGSVGElement> | React.TouchEvent<SVGSVGElement>) => {
     if (disabled) return;
 
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left - BOARD_PADDING;
-    const y = e.clientY - rect.top - BOARD_PADDING;
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+
+    const x = (clientX - rect.left) / scale - BOARD_PADDING;
+    const y = (clientY - rect.top) / scale - BOARD_PADDING;
 
     const col = Math.round(x / CELL_SIZE);
     const row = Math.round(y / CELL_SIZE);
@@ -29,11 +51,13 @@ const Board: React.FC<BoardProps> = ({ board, lastMove, onCellClick, disabled = 
   };
 
   return (
-    <div className="flex justify-center items-center p-4">
+    <div ref={containerRef} className="flex justify-center items-center p-4 w-full">
       <svg
-        width={boardSize}
-        height={boardSize}
+        width={displaySize}
+        height={displaySize}
+        viewBox={`0 0 ${originalBoardSize} ${originalBoardSize}`}
         onClick={handleClick}
+        onTouchEnd={handleClick}
         className={`bg-[#DEB887] rounded-lg shadow-2xl ${!disabled ? 'cursor-pointer' : 'cursor-not-allowed'}`}
       >
         {/* 绘制网格 */}

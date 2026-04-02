@@ -6,6 +6,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -16,8 +17,44 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 #root {
   min-height: 100vh;
 }
+
+@media (max-width: 640px) {
+  h1 {
+    font-size: 2rem !important;
+  }
+
+  h2 {
+    font-size: 1.5rem !important;
+  }
+
+  .text-xl {
+    font-size: 1.1rem !important;
+  }
+
+  .text-2xl {
+    font-size: 1.3rem !important;
+  }
+
+  .text-4xl {
+    font-size: 1.8rem !important;
+  }
+
+  .text-6xl {
+    font-size: 3rem !important;
+  }
+
+  .p-6 {
+    padding: 1rem !important;
+  }
+
+  .p-8 {
+    padding: 1.5rem !important;
+  }
+}
+

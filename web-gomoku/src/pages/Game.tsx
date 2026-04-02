@@ -17,7 +17,7 @@ const Game: React.FC = () => {
   const [opponentName, setOpponentName] = useState<string>('');
   const [showRoomModal, setShowRoomModal] = useState(mode === 'multiplayer');
 
-  const { state, handleClick, restartGame, undoMove: localUndoMove, updateBoardFromExternal, updateGameStatus } = useGame(mode, difficulty);
+  const { state, handleClick, makeMove, restartGame, undoMove: localUndoMove, updateBoardFromExternal, updateGameStatus } = useGame(mode, difficulty);
   const { room, loading, error, playerNumber, createRoom, joinRoom, makeMove: makeMultiplayerMove, restartRoom, undoMove: multiplayerUndoMove, leaveRoom } = useMultiplayer();
 
   useEffect(() => {
@@ -42,7 +42,17 @@ const Game: React.FC = () => {
   const handleBoardClick = async (row: number, col: number) => {
     if (mode === 'multiplayer') {
       if (!room || !playerNumber || room.status !== 'playing' || room.current_player !== playerNumber) return;
-      await makeMultiplayerMove({ row, col }, playerNumber);
+
+      // 乐观更新：先本地立刻落子，不需要等服务端返回
+      const moveSuccess = makeMove(row, col, playerNumber);
+      if (moveSuccess) {
+        // 异步请求服务端更新，不阻塞UI
+        const success = await makeMultiplayerMove({ row, col }, playerNumber);
+        if (!success) {
+          // 如果服务端失败，回滚本地状态
+          localUndoMove();
+        }
+      }
     } else {
       handleClick(row, col);
     }

@@ -43,6 +43,7 @@ export const useMultiplayer = () => {
             board: emptyBoard,
             current_player: 1,
             status: 'waiting',
+            moves: []
           }
         ])
         .select()
@@ -132,6 +133,8 @@ export const useMultiplayer = () => {
         status = 'finished';
       }
 
+      const newMoves = [...room.moves, { ...position, player }];
+
       const { error } = await supabase
         .from('rooms')
         .update({
@@ -140,6 +143,7 @@ export const useMultiplayer = () => {
           status,
           winner,
           last_move: { ...position, player },
+          moves: newMoves
         })
         .eq('id', room.id);
 
@@ -168,6 +172,7 @@ export const useMultiplayer = () => {
           status: 'playing',
           winner: null,
           last_move: null,
+          moves: []
         })
         .eq('id', room.id);
 
@@ -180,25 +185,36 @@ export const useMultiplayer = () => {
   }, [room, supabase]);
 
   const undoMove = useCallback(async (): Promise<boolean> => {
-    if (!supabase || !room || room.status !== 'playing') {
+    if (!supabase || !room || room.status !== 'playing' || room.moves.length < 2) {
       setError('当前状态无法悔棋');
       return false;
     }
 
     try {
-      // 重新构建棋盘，撤销最后一步
+      // 联机模式和人机模式一致，每次悔棋撤销最后两步（双方各一步）
+      const newMoves = [...room.moves];
+      const lastMove1 = newMoves.pop(); // 对方的最后一步
+      const lastMove2 = newMoves.pop(); // 自己的上一步
+
+      // 重新构建棋盘，清空最后两步的棋子
       const newBoard = JSON.parse(JSON.stringify(room.board));
-      if (room.last_move) {
-        const { row, col } = room.last_move;
-        newBoard[row][col] = 0;
+      if (lastMove1) {
+        newBoard[lastMove1.row][lastMove1.col] = 0;
       }
+      if (lastMove2) {
+        newBoard[lastMove2.row][lastMove2.col] = 0;
+      }
+
+      // 悔棋后还是轮到当前玩家走
+      const newLastMove = newMoves.length > 0 ? newMoves[newMoves.length - 1] : null;
 
       const { error } = await supabase
         .from('rooms')
         .update({
           board: newBoard,
-          current_player: room.current_player === 1 ? 2 : 1,
-          last_move: null,
+          current_player: room.current_player, // 保持当前玩家不变
+          last_move: newLastMove,
+          moves: newMoves
         })
         .eq('id', room.id);
 

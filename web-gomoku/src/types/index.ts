@@ -23,6 +23,7 @@ export interface Room {
   status: 'waiting' | 'playing' | 'finished';
   winner?: Player;
   last_move?: Move;
+  moves: Move[];
   created_at: string;
 }
 
